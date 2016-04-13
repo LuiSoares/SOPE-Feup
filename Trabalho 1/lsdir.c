@@ -2,23 +2,31 @@
 #include <dirent.h>	/*For directory related functions (DIRectory ENTries)*/
 
 /*stat function includes*/
+/*See: http://linux.die.net/man/2/stat*/
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 /*TODO: TO GET FILE INFORMATION USE STAT() FUNCTION*/
 
-char* getInfoFromFile (char* filePath)
+int getInfoFromFile (char* filePath)
 {
+	/*st_mode also has the permissions*/
 	struct stat *s;
+	int ret;
 	
 	stat (filePath, s);
 	
 	/*Use "/" do separate data.*/
 	
-	return NULL;
+	ret = (int)s->st_mode;
+	
+	return ret;
 }
 
+/**
+ * Saves to a text file the name of the regular files present in the directory.
+ */
 int writeFilesFromDir(char* directory){
 	DIR *dir;
 	struct dirent *ent;
@@ -50,10 +58,14 @@ int writeFilesFromDir(char* directory){
 	return 0;
 }
 
+
 int main()
 {
 	char* testDirectory = "/usr/users2/mieic2014/up201403526/Downloads";
+	char* filePath = "/usr/users2/mieic2014/up201403526/Downloads/test";
 	
-	writeFilesFromDir(testDirectory);
+	//writeFilesFromDir(testDirectory);
+	
+	printf ("%d", getInfoFromFile(filePath));
 	
 }

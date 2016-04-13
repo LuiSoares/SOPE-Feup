@@ -1,0 +1,16 @@
+#!/bin/bash
+# My first script
+
+# Os argumentos da shell estão acessíveis através do "$".
+# $0 é o primeiro argumento (nome do script)
+
+filename = "$1"
+
+make $filename
+
+if [$? -eq 0]; then
+./$filename
+
+else
+echo "COMPILATION ERROR"
+fi

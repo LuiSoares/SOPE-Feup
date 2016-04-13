@@ -1,0 +1,5 @@
+﻿SINAIS
+
+
+
+A maior parte dos problemas pode ser usada com signal() ou sigaction(). Na maior parte dos casos, a diferença entre os dois não é aparente, apesar de o sigaction() permitir mais opções, e ser PREFERÍVEL USAR O SIGACTION(), por causa de vulnerabilidades inerentes ao sleep().
