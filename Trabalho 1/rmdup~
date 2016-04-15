@@ -1,6 +1,0 @@
-#!/bin/bash
-
-#To give this script permission, write "chmod +x rmdup.sh" in console, so it has authorization to execute.
-
-
-echo Hello World
