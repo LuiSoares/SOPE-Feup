@@ -12,6 +12,9 @@
 /*for time functions and structs*/
 #include <time.h>
 
+/*include open functions*/
+#include <fcntl.h>
+
 
 /*
  * Struct that'll be used to store regular files' properties. 
@@ -29,10 +32,9 @@ typedef struct
 
 /* Saves a file's info to a RFile struct. DON'T FORGET TO FREE MEMORY AFTER USING IT! @see RFile.
  * */
-RFile* getInfoFromFile (char* filePath)
+void getInfoFromFile (char* filePath, RFile* file)
 {
 	struct stat s;		// get file data
-	RFile* file = (RFile*)malloc(sizeof(RFile));	// store file data
 	
 	stat (filePath, &s);
 	
@@ -40,19 +42,13 @@ RFile* getInfoFromFile (char* filePath)
 	file->mode = (unsigned long) (s.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO));
 	file->lastMDate = s.st_mtime;	
 	file->absolutePath = filePath;
-	
-	return file;
 }
 
 /* Converts RFile data to a string that can be saved in a .txt file.
  * */
-char* rFileToString(RFile file)
+void rFileToString(RFile file, char* fileInfo)
 {
-	char* ret = (char*)malloc(sizeof(char));
-	
-	sprintf(ret, "%s %lld %lo %s %s", file.name, file.size, file.mode, file.absolutePath, ctime(&file.lastMDate));	// %lo prints in long octal
-	
-	return ret;
+	sprintf(fileInfo, "%s %lld %lo %s %s", file.name, file.size, file.mode, file.absolutePath, ctime(&file.lastMDate));	// %lo prints in long octal
 }
 
 /**
@@ -61,28 +57,47 @@ char* rFileToString(RFile file)
 int writeFilesFromDir(char* directory){
 	DIR *dir;
 	struct dirent *ent;
+	struct stat s;
+	pid_t pid;
+	 
 	
 	if ((dir = opendir (directory)) != NULL) 
 	{
 		FILE *files;
 
-		files = fopen("files.txt", "w");	// opens or creates for writing only
-	
+		files = fopen("/tmp/files.txt", "a");	//append
+		
 		/*Write all file names to a file.*/
 		while ((ent = readdir (dir)) != NULL) 
 		{
-			char* fileName = ent->d_name;
-
-			fputs(fileName, files);
-			fputs("\n", files);
+			stat(ent->d_name, &s); 
+			
+			if (S_ISREG(s.st_mode))
+			{		
+					char filePath[1024] = "";
+					RFile* file = (RFile*)malloc(sizeof(RFile));
+					char fileInfo[1024] = "";
+					
+					sprintf(filePath, "%s/%s", directory, ent->d_name);	// gets file's ABSOLUTE path
+					
+					getInfoFromFile(filePath, file);
+					file->name = ent->d_name;
+					
+					rFileToString(*file, fileInfo);
+					
+					fputs(fileInfo, files);
+					
+					free(file);
+			}
+			
 		}
 		
 		fclose(files);
-			
 		closedir(dir);
+		
 	} else {
 		/* could not open directory */
-		perror ("");
+		perror ("Could not open directory.");
 		return -1;
 	}
 
@@ -92,18 +107,12 @@ int writeFilesFromDir(char* directory){
 
 int main()
 {
-	char* testDirectory = "/usr/users2/mieic2014/up201403526/Downloads";
-	char* filePath = "/home/jazz/Desktop/SOPE-Feup/Trabalho 1/rmdup.c";
+	char* testDirectory = "/home/jazz/Desktop/SOPE/SOPE-Feup/Trabalho 1";
+	char* filePath = "/home/jazz/Desktop/SOPE/SOPE-Feup/Trabalho 1/rmdup.c";
 	
 	time_t t = time(NULL);
 	
-	RFile* testfile = getInfoFromFile(filePath);
-	
-	//writeFilesFromDir(testDirectory);
-	
-	char* c = rFileToString(*testfile);	// since the pointer becomes a local variable in this main() function, it doesn't need to be freed (???) -> if freed gives error
-	
-	printf ("%s", c);
+	writeFilesFromDir(testDirectory);
 	
 	
 }
