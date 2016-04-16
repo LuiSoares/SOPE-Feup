@@ -51,43 +51,44 @@ void rFileToString(RFile file, char* fileInfo)
 	sprintf(fileInfo, "%s %lld %lo %s %s", file.name, file.size, file.mode, file.absolutePath, ctime(&file.lastMDate));	// %lo prints in long octal
 }
 
-/**
+/*
  * Saves to a text file the name of the regular files present in the directory.
- */
-int writeFilesFromDir(char* directory){
+ * */
+void writeFilesFromDir(char* directory){
 	DIR *dir;
 	struct dirent *ent;
 	
 	pid_t childPids[30];
 	int pidCounter = 0;
-	char currentPath[1024];
+	char currentPath[PATH_MAX];
 	 
 	
-	if ((dir = opendir (directory)) != NULL) 
+	if ((dir = opendir (directory)) != NULL) // if teh directory can be opened
 	{
 		FILE *files;
 
 		files = fopen("/tmp/files.txt", "a");	//append
 		
 		/*Write all file names to a file.*/
-		while ((ent = readdir (dir)) != NULL) 
+		while ((ent = readdir (dir)) != NULL) // while there are files to read
 		{
 			struct stat s;
 			
 			sprintf(currentPath, "%s/%s", directory, ent->d_name);
 			
-			stat(testPath, &s); 
+			if(stat(currentPath, &s))	// if it's not 0 (if it's not sucessful)
+			{
+				perror("stat failed");
+				exit (-1);
+			} 
 			
 			// if it's a regular file
 			if (S_ISREG(s.st_mode))
-			{		printf("Is file: %s\n", ent->d_name); 
-					char filePath[1024] = "";
+			{		 
 					RFile* file = (RFile*)malloc(sizeof(RFile));
 					char fileInfo[1024] = "";
 					
-					sprintf(filePath, "%s/%s", directory, ent->d_name);	// gets file's ABSOLUTE path
-					
-					getInfoFromFile(filePath, file);
+					getInfoFromFile(currentPath, file);
 					file->name = ent->d_name;
 					
 					rFileToString(*file, fileInfo);
@@ -101,10 +102,8 @@ int writeFilesFromDir(char* directory){
 			
 			// if it's a directory
 			if(S_ISDIR(s.st_mode) && (strcmp(".", ent->d_name) != 0) && (strcmp("..", ent->d_name) != 0))
-			{
-				printf ("Is Dir: %s\n", ent->d_name);
-				
-				childPids[pidCounter] = fork();
+			{	
+				childPids[pidCounter] = fork();	// add child ID to array
 				
 				if(childPids[pidCounter] < 0)
 				{
@@ -113,16 +112,8 @@ int writeFilesFromDir(char* directory){
 				}
 				
 				if(childPids[pidCounter]== 0) // child
-				{
-					char subDirectoryPath[500] = "";
-					
-					printf ("I'm a child!\n");
-					
-					sprintf(subDirectoryPath, "%s/%s", directory, ent->d_name);	// gets directory's ABSOLUTE path
-					
-					printf("%s\n", subDirectoryPath);
-					
-					int i = execl("./lsdir", "lsdir", currentPath, (char *)0);
+				{	
+					execl("./lsdir", "lsdir", currentPath, (char *)0);
 					perror("execl failed");
 					
 					exit(0);
@@ -130,9 +121,7 @@ int writeFilesFromDir(char* directory){
 				}
 				
 				if(childPids[pidCounter]> 0) // father
-				{
-					printf ("I'm a father.\n");
-					
+				{	
 					//continue
 				}
 				
@@ -147,31 +136,22 @@ int writeFilesFromDir(char* directory){
 	} else {
 		/* could not open directory */
 		perror ("Could not open directory.");
-		printf ("Problematic directory: %s", directory);
-		return -1;
+		exit(-2);
 	}
 	
+	/*Wait for child processes*/
 	int counter = 0;
 	
 	for (; counter < pidCounter; counter++)
 	{
 		waitpid(childPids[counter], NULL, 0);
 	}
-	return 0;
 }
 
 
 int main(int argc, char* argv[])
-{
-	char* testDirectory = "/home/jazz/Desktop/SOPE/SOPE-Feup/Trabalho1";
-	char* filePath = "/home/jazz/Desktop/SOPE/SOPE-Feup/Trabalho 1/rmdup.c";
-	
-	time_t t = time(NULL);
-	
+{	
 	writeFilesFromDir(argv[1]);
 	
-	printf ("%s", argv[1]);
-	
-	return 0;
-	
+	return 0;	
 }
