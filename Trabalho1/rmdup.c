@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 		sortTextFile("/tmp/files.txt");
 	}
 	
-	addHardlink("./test/123", "./test/test1/321");
+	//addHardlink("./test/123", "./test/test1/321");
 	
 	/*When finished, delete /tmp/files.txt
 	if(remove("/tmp/files.txt") != 0)	// remove only works if NO PROCESS IS USING THE FILE

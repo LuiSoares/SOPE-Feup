@@ -39,7 +39,11 @@ void getInfoFromFile (char* filePath, RFile* file)
  * */
 void rFileToString(RFile file, char* fileInfo)
 {
-	sprintf(fileInfo, "%s %lld %lo %s %s", file.name, file.size, file.mode, file.absolutePath, ctime(&file.lastMDate));	// %lo prints in long octal
+	char timeInString[40];
+	
+	strftime(timeInString, sizeof(timeInString), "%F %T", localtime(&file.lastMDate));
+	
+	sprintf(fileInfo, "%s %lld %lo %s %s\n", file.name, file.size, file.mode, file.absolutePath, timeInString);	// %lo prints in long octal
 }
 
 /*
