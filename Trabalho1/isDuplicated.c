@@ -62,6 +62,7 @@ int getAbsolutePath(char *str1, char *sub1){
 	char sub[num+1];
 	memcpy(sub, &str[j], num);
 	strcpy(sub1, sub);
+	sub[num] = '\0';
 	return 0;
 }
 

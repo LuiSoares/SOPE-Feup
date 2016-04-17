@@ -20,8 +20,259 @@
 
 #define MAX_LENGTH 200
 
+/* Unlinks file in path2 and adds a hardlink to path1.
+ * 
+ * path1 is the path to be written (older file); path2 is the path being overwritten (more recent file)
+ * 
+ * WORKING
+ * */
+void addHardlink(char* path1, char* path2, char* initialDir)
+{
+	FILE *file;
+	
+	char hardPath[PATH_MAX]; 
+	sprintf(hardPath, "%s/hlinks.txt", initialDir);  
+	
+	if ((file = fopen(hardPath, "a")) != NULL){
+		
+		if(unlink(path2) != 0)
+		{
+			perror ("unlink failed");
+		}
+		
+		if (link(path1, path2) != 0)
+		{
+			perror ("link failed");
+		}
+		
+		fprintf(file, "%s\n", path2);
+
+		fclose(file);
+	}
+
+	else{
+		perror("Erro ao abrir ficheiro\n");
+	}
+}
+
+/*	Removes absolute Path from given string   		WORKING*/
+int removeAbsolutePathFromString(char *str1, char*sub1){
+	char str[MAX_LENGTH];
+	strcpy(str, str1);
+	int i=0, j=0;
+	
+	int spaceCounter = 0;
+	
+	while (spaceCounter != 3)
+	{
+		if (str1[i] == ' ')
+			spaceCounter++;
+		str[j] = str1[i];
+		i++;
+		j++;
+	}
+	
+	str[j] = '\0';
+	
+	strcpy(sub1, str);
+	return 0;
+}
+
+/*	Gets absolute Path (sub1) from given string (str1)		WORKING*/
+int getAbsolutePath(char *str1, char *sub1){
+	char str[MAX_LENGTH];
+	strcpy(str, str1);
+	int i=0, j=0;
+	int spaceCounter = 0;
+	
+	while (spaceCounter != 3)
+	{
+		if (str1[i] == ' ')
+			spaceCounter++;
+		i++;
+	}
+	
+	while (str1[i] != ' ')
+	{
+		str[j] = str1[i];
+		i++;
+		j++;
+	}
+	
+	str[j] = '\0';
+	
+	strcpy(sub1, str);
+	//printf("%s\n", str);
+	return 0;
+	
+}
+
+/*
+* Compares the content of two files, given the absolute path   --- 	 WORKING
+*
+* @Return Returns 1 if content is the same, 0 if is not, and -1 if error
+*
+*/
+int compareContent(char *fileName1, char *fileName2){ 
+	FILE *file1 = NULL;
+	FILE *file2 = NULL;
+
+	char tempData1[MAX_LENGTH], tempData2[MAX_LENGTH];
+	char **strData1 = NULL;
+	char **strData2 = NULL;
+	int i, nLines1 = 0, nLines2 = 0;
+	//printf("%s\n%s\n", fileName1, fileName2);
+	
+	if ((file1 = fopen(fileName1, "r")) != NULL && (file2 = fopen(fileName2, "r")) != NULL){
+			
+		//printf("Abriu os dois ficheiros\n");
+
+		/*Reads the file1 and puts each line info in a string list - strData1*/
+		while (fgets (tempData1, MAX_LENGTH, file1) != NULL){
+			strData1 = (char**)realloc(strData1, sizeof(char**)*(nLines1+1));
+			strData1[nLines1] = (char*)calloc(MAX_LENGTH,sizeof(char));
+ 			strcpy(strData1[nLines1], tempData1);
+        	nLines1++;
+		}
+
+		/*Reads the file2 and puts each line info in a string list - strData2*/
+		while (fgets (tempData2, MAX_LENGTH, file2) != NULL){
+			strData2 = (char**)realloc(strData2, sizeof(char**)*(nLines2+1));
+			strData2[nLines2] = (char*)calloc(MAX_LENGTH,sizeof(char));
+ 			strcpy(strData2[nLines2], tempData2);
+        	nLines2++;
+		}
+
+		/*If number of lines differ, the files content is not the same*/
+		if (nLines1 != nLines2){
+			return 0;
+		}
+
+		/*Checks if the string lists are equal*/
+		for (i=0; i<(nLines1-1); i++){
+			if (strcmp(strData1[i], strData2[i]) != 0){ //if strings are different
+				return 0;
+			}
+		}
+		
+		/*Free each string */
+    	for(i = 0; i < nLines1; i++)
+        	free(strData1[i]);
+
+    	for(i = 0; i < nLines2; i++)
+        	free(strData2[i]);
+
+		free(strData1);
+		free(strData2);
+
+		return 1;
+	}
+	
+	else{
+		//perror("Erro ao abrir ficheiro\n");
+		return -1;
+	}
+	
+}
+
+/*Checks if the are any duplicates in the .txt file */
+int isDuplicated(char *fileName, char* initialDir){
+
+	FILE *file1 = fopen(fileName, "r");
+	FILE *file2 = fopen(fileName, "r");
+
+
+	char str1[MAX_LENGTH], str2[MAX_LENGTH];
+	char aux1[MAX_LENGTH], aux2[MAX_LENGTH];
+	
+	
+	if (file1 != NULL && file2 != NULL){
+
+		int f1 = 0, f2 =0;
+
+		while (fgets (str1, MAX_LENGTH, file1) != NULL){
+			f1++;
+			//printf("%d %d\n", f1, f2);
+
+			//enquanto f1 nao apontar para o mesmo que f2
+			while (f1 < f2){
+				fgets (str1, MAX_LENGTH, file1);
+				f1++;
+			}
+
+			//enquanto f2 apontar para uma linha menor que f1
+			while (f2 < f1){
+				fgets (str2, MAX_LENGTH, file2);
+				f2++;
+			}
+			
+			while (fgets(str2, MAX_LENGTH, file2) != NULL){
+				f2++;
+				strcpy(aux1, str1);
+				strcpy(aux2, str2);
+
+				//if initials of the strings are the same
+				if (str1[0] == str2[0]){
+					
+					//Remove absolutePath from string
+					char sub1[MAX_LENGTH];
+					removeAbsolutePathFromString(str1, sub1);
+
+					char sub2[MAX_LENGTH];
+					removeAbsolutePathFromString(str2, sub2);
+					
+					//Check if two lines (without absolutePath) are the same
+					if (strcmp(sub1, sub2) == 0){
+
+						//Get absolutePath from string
+						char path1[MAX_LENGTH];
+						getAbsolutePath(str1, path1);
+						
+						char path2[MAX_LENGTH];
+						getAbsolutePath(str2, path2);
+
+						//printf("Linhas Iguais. \nabsolutePath:%s\n%s\n", path1, path2);
+							
+						if (strcmp(path1, path2) != 0)
+						{
+
+							// if files are duplicates
+							if (compareContent(path1, path2) == 1){
+								//printf("Duplicado - igual conteudo\n");	
+								addHardlink(path1, path2, initialDir);
+							}		   
+
+							//if not
+							else if (compareContent(path1, path2) == 0){
+								//printf("Nao duplicado - diferente conteudo\n");
+							}
+						}
+					}					
+					else{
+						//printf("%d %d", f1, f2);
+						//printf("Nao duplicado - linhas diferentes\n");
+						//printf("%s\n%s\n", str1, str2);
+						break;
+					}
+					//printf("%s%s\n", sub1, sub2);
+				}
+				//If initials are not the same, it doesn't compare strings
+				else{
+					break;
+				}
+					
+			}
+		}
+	}
+
+	fclose(file1);
+	fclose(file2);
+		
+	return 0;	
+}
+
 /*Sorts text file in with name/file 'filename' alphabetically */
-void sortTextFile(char *fileName){
+int sortTextFile(char *fileName){
 	FILE *infile = NULL;
 	FILE *outfile = NULL;
 	
@@ -77,66 +328,12 @@ void sortTextFile(char *fileName){
 	
 	else{
 		perror("Erro ao abrir ficheiro\n");
-		exit(-1);
+		return -1;
 	}
-	
-	exit(0);
-}
-
-/* Unlinks file in path2 and adds a hardlink to path1.
- * 
- * path1 is the path to be written (older file); path2 is the path being overwritten (more recent file)
- * 
- * WORKING
- * */
-void addHardlink(char* path1, char* path2)
-{
-	FILE *file;
-	
-	if ((file = fopen("hardLinks.txt", "a")) != NULL){
-		if(unlink(path2) != 0)
-		{
-			perror ("unlink failed");
-		}
 		
-		if (link(path1, path2) != 0)
-		{
-			perror ("link failed");
-		}
-		fprintf(file, "%s\n", path2);
-
-		fclose(file);
-	}
-
-	else{
-		perror("Erro ao abrir ficheiro\n");
-		exit(-1);
-	}
-
-	exit (0);
-}
-
-/*	Gets absolute Path (sub1) from given string (str1)		WORKING*/
-int getAbsolutePath(char *str1, char *sub1){
-	int i=0, j=0, num = 0;
-	char str[MAX_LENGTH];
-	strcpy(str, str1);
-	
-	while (str[i] != '/'){
-		i++;
-		j++;
-	}
-	
-	while (str[i] != ' '){
-		num++;
-		i++;
-	}
-	
-	char sub[num+1];
-	memcpy(sub, &str[j], num);
-	strcpy(sub1, sub);
 	return 0;
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -146,6 +343,14 @@ int main(int argc, char* argv[])
 		printf ("Usage: %s <dir_name>\n", argv[0]);	
 		return -1;
 	}
+	
+	DIR *dir;
+	
+	if ((dir = opendir (argv[1])) == NULL)
+	{
+		perror("Invalid directory");
+		return -1;
+	} 
 	
 	pid_t childPid;
 	
@@ -167,22 +372,20 @@ int main(int argc, char* argv[])
 				
 	if(childPid > 0) // father
 	{	
-		wait(NULL);	//has to wait for lsdir to create /tmp/files.txt, which will store the file's info
+		wait(NULL); //has to wait for lsdir to create /tmp/files.txt, which will store the file's info
 	}
 	
 	/*Sorts file for easier reading*/
-	sortTextFile("/tmp/files.txt"); 
+	sortTextFile("files.txt"); 
+
+	/*Tests if files in files.txt are duplicated*/
+	isDuplicated("files.txt", argv[1]);
 	
-	//FILE* iterator1 = fopen("/tmp/files.txt", "r") // read only
-	
-	
-	//addHardlink("./test/123", "./test/test1/321");
-	
-	/*When finished, delete /tmp/files.txt
-	if(remove("/tmp/files.txt") != 0)	// remove only works if NO PROCESS IS USING THE FILE
+	//When finished, delete /tmp/files.txt
+	if(remove("files.txt") != 0)	// remove only works if NO PROCESS IS USING THE FILE
 	{
 		perror ("remove failed");
 	}
-	*/
+	
 	return 0;
 }

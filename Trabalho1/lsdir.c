@@ -46,6 +46,8 @@ void rFileToString(RFile file, char* fileInfo)
 	sprintf(fileInfo, "%s %lld %lo %s %s\n", file.name, file.size, file.mode, file.absolutePath, timeInString);	// %lo prints in long octal
 }
 
+
+
 /*
  * Saves to a text file the name of the regular files present in the directory.
  * */
@@ -62,7 +64,7 @@ void writeFilesFromDir(char* directory){
 	{
 		FILE *files;
 
-		files = fopen("/tmp/files.txt", "a");	//append
+		files = fopen("files.txt", "a");	//append
 		
 		/*Write all file names to a file.*/
 		while ((ent = readdir (dir)) != NULL) // while there are files to read
