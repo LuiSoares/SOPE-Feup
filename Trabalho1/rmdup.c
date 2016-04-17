@@ -21,7 +21,7 @@
 #define MAX_LENGTH 200
 
 /*Sorts text file alphabetically*/
-int sortTextFile(char *fileName){
+void sortTextFile(char *fileName){
 	FILE *infile = NULL;
 	FILE *outfile = NULL;
 	
@@ -77,10 +77,43 @@ int sortTextFile(char *fileName){
 	
 	else{
 		perror("Erro ao abrir ficheiro\n");
-		return -1;
+		exit(-1);
 	}
 	
-	return 0;
+	exit(0);
+}
+
+/* Unlinks file in path2 and adds a hardlink to path1.
+ * 
+ * path1 is the path to be written (older file); path2 is the path being overwritten (more recent file)
+ * 
+ * WORKS!
+ * */
+void addHardlink(char* path1, char* path2)
+{
+	FILE *file;
+	
+	if ((file = fopen("hardLinks.txt", "a")) != NULL){
+		if(unlink(path2) != 0)
+		{
+			perror ("unlink failed");
+		}
+		
+		if (link(path1, path2) != 0)
+		{
+			perror ("link failed");
+		}
+		fprintf(file, "%s\n", path2);
+
+		fclose(file);
+	}
+
+	else{
+		perror("Erro ao abrir ficheiro\n");
+		exit(-1);
+	}
+
+	exit (0);
 }
 
 int main(int argc, char* argv[])
@@ -116,6 +149,8 @@ int main(int argc, char* argv[])
 		wait(NULL);
 		sortTextFile("/tmp/files.txt");
 	}
+	
+	addHardlink("./test/123", "./test/test1/321");
 	
 	/*When finished, delete /tmp/files.txt
 	if(remove("/tmp/files.txt") != 0)	// remove only works if NO PROCESS IS USING THE FILE
