@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <string.h>
+
+
 /*For directory related functions (DIRectory ENTries)*/
 #include <dirent.h>	
 
@@ -8,25 +11,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
-
-/*for time functions and structs*/
-#include <time.h>
+#include <sys/wait.h>
 
 /*include open functions*/
 #include <fcntl.h>
 
-
-/*
- * Struct that'll be used to store regular files' properties. 
- * */
-typedef struct 
-{
-	char* name;			// file's name
-	long long size;		// file's size in bytes
-	unsigned long mode;	// file permissions in decimal representation
-	time_t lastMDate;	// last file modification date in time_t struct
-	char* absolutePath;	// file's absolute path in the system
-}RFile;
+/*include created file struct*/
+#include "RFile.h"
 
 /*TODO: TO GET FILE INFORMATION USE STAT() FUNCTION*/
 
@@ -151,6 +142,13 @@ void writeFilesFromDir(char* directory){
 
 int main(int argc, char* argv[])
 {	
+	if (argc != 2)
+	{
+		fprintf(stderr, "Error: Bad argument usage.\n");	// prints error to stderr file
+		printf ("Usage: %s <dir_name>\n", argv[0]);	// use argv[0] because it depends on the directory which lsdir is run from
+		return -1;	// a return in the main function works like an exit()
+	}
+	
 	writeFilesFromDir(argv[1]);
 	
 	return 0;	
