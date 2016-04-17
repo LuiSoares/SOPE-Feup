@@ -1,5 +1,4 @@
 all: lsdir.c rmdup.c
-	test -d bin || mkdir bin
 	gcc -Wall lsdir.c -o ./bin/lsdir
 	gcc -Wall rmdup.c -o ./bin/rmdup
 
