@@ -43,7 +43,7 @@ int removeAbsolutePathFromString(char *str1, char*sub1){
 }
 
 
-/*	Gets absolute Path from given string		WORKING*/
+/*	Gets absolute Path (sub1) from given string (str1)		WORKING*/
 int getAbsolutePath(char *str1, char *sub1){
 	int i=0, j=0, num = 0;
 	char str[MAX_LENGTH];

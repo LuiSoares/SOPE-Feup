@@ -20,7 +20,7 @@
 
 #define MAX_LENGTH 200
 
-/*Sorts text file alphabetically*/
+/*Sorts text file in with name/file 'filename' alphabetically */
 void sortTextFile(char *fileName){
 	FILE *infile = NULL;
 	FILE *outfile = NULL;
@@ -87,7 +87,7 @@ void sortTextFile(char *fileName){
  * 
  * path1 is the path to be written (older file); path2 is the path being overwritten (more recent file)
  * 
- * WORKS!
+ * WORKING
  * */
 void addHardlink(char* path1, char* path2)
 {
@@ -114,6 +114,28 @@ void addHardlink(char* path1, char* path2)
 	}
 
 	exit (0);
+}
+
+/*	Gets absolute Path (sub1) from given string (str1)		WORKING*/
+int getAbsolutePath(char *str1, char *sub1){
+	int i=0, j=0, num = 0;
+	char str[MAX_LENGTH];
+	strcpy(str, str1);
+	
+	while (str[i] != '/'){
+		i++;
+		j++;
+	}
+	
+	while (str[i] != ' '){
+		num++;
+		i++;
+	}
+	
+	char sub[num+1];
+	memcpy(sub, &str[j], num);
+	strcpy(sub1, sub);
+	return 0;
 }
 
 int main(int argc, char* argv[])
@@ -145,10 +167,14 @@ int main(int argc, char* argv[])
 				
 	if(childPid > 0) // father
 	{	
-		//continue
-		wait(NULL);
-		sortTextFile("/tmp/files.txt");
+		wait(NULL);	//has to wait for lsdir to create /tmp/files.txt, which will store the file's info
 	}
+	
+	/*Sorts file for easier reading*/
+	sortTextFile("/tmp/files.txt"); 
+	
+	//FILE* iterator1 = fopen("/tmp/files.txt", "r") // read only
+	
 	
 	//addHardlink("./test/123", "./test/test1/321");
 	
