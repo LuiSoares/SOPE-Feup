@@ -85,14 +85,14 @@ int getAbsolutePath(char *str1, char *sub1){
 	int i=0, j=0;
 	int spaceCounter = 0;
 	
-	while (spaceCounter != 3)
+	while (spaceCounter != 5)
 	{
 		if (str1[i] == ' ')
 			spaceCounter++;
 		i++;
 	}
 	
-	while (str1[i] != ' ')
+	while (str1[i] != '\n')
 	{
 		str[j] = str1[i];
 		i++;
