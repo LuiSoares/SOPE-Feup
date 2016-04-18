@@ -64,18 +64,18 @@ int removeAbsolutePathFromString(char *str1, char*sub1){
 	
 	int spaceCounter = 0;
 	
-	while (spaceCounter != 3)
+	while (spaceCounter < 3)
 	{
-		if (str1[i] == ' ')
+		if (str1[i] == ',')
 			spaceCounter++;
 		str[j] = str1[i];
 		i++;
 		j++;
 	}
 	
-	str[j] = '\0';
-	
 	strcpy(sub1, str);
+	sub1[j] = '\0';
+	
 	return 0;
 }
 
@@ -86,9 +86,9 @@ int getAbsolutePath(char *str1, char *sub1){
 	int i=0, j=0;
 	int spaceCounter = 0;
 	
-	while (spaceCounter != 5)
+	while (spaceCounter != 4)
 	{
-		if (str1[i] == ' ')
+		if (str1[i] == ',')
 			spaceCounter++;
 		i++;
 	}
@@ -100,9 +100,9 @@ int getAbsolutePath(char *str1, char *sub1){
 		j++;
 	}
 	
-	str[j] = '\0';
-	
 	strcpy(sub1, str);
+	sub1[j] = '\0';
+	
 	//printf("%s\n", str);
 	return 0;
 	

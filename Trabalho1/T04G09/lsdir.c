@@ -43,7 +43,7 @@ void rFileToString(RFile file, char* fileInfo)
 	
 	strftime(timeInString, sizeof(timeInString), "%F %T", localtime(&file.lastMDate));
 	
-	sprintf(fileInfo, "%s %lld %lo %s %s\n", file.name, file.size, file.mode, timeInString, file.absolutePath);	// %lo prints in long octal
+	sprintf(fileInfo, "%s,%lld,%lo,%s,%s\n", file.name, file.size, file.mode, timeInString, file.absolutePath);	// %lo prints in long octal
 }
 
 
