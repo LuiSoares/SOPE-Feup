@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <sys/wait.h>
 
+
 /*include file struct*/
 #include "RFile.h"
 
@@ -344,8 +345,8 @@ int main(int argc, char* argv[])
 				
 	if(childPid == 0) // child
 	{	
-		execl("./lsdir", "lsdir", argv[1], (char *)0);
-		perror("execl failed");
+		execvp("./lsdir", argv);
+		perror("execvp failed");
 					
 		exit(0);		
 	}
