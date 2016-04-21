@@ -1,0 +1,6 @@
+test/a
+test/UntitledFolder/lol/b
+test/b
+..//bin/test/a
+..//bin/test/UntitledFolder/lol/b
+..//bin/test/b
