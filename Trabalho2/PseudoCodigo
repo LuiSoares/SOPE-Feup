@@ -1,0 +1,20 @@
+Criar 2 programas multi-thread:
+	-parque
+	-gerador
+
+Estes programas correm durante um período de tempo especificado na linha de comandos.
+
+PARQUE
+
+No parque vão haver 2 níveis de threads:
+	-4 controladores (sempre presentes)
+	-arrumadores (criados pelos controladores, com existência periódica)
+
+Registar cada ocorrência num ficheiro, com o instante da ocorrência em clock ticks.
+
+GERADOR
+
+Cria viaturas pseudo-aleatórias e associa a cada uma um NOVO thread.
+
+O tempo de vida desse thread começa quando a viatura é CRIADA e só desaparece quando a viatura SAI do parque.
+
