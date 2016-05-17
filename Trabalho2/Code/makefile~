@@ -13,11 +13,12 @@ bin:
 
 # 	Para cada ficheiro fazer uma nova etiqueta com o caminho.
 
-./bin/test:
-	gcc -Wall test.c -o ./bin/test -lm -pthread
+./bin/gerador:
+	gcc -Wall gerador.c -o ./bin/gerador -lm -pthread
 
 ./bin/parque:
 	gcc -Wall parque.c -o ./bin/parque -lm -pthread
 
+
 clean: 
-	rm test.o
+	rm -rf bin/

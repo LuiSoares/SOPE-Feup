@@ -6,15 +6,15 @@
 # 	No all só se podem usar etiquetas.
 #	Comandos têm de ser escritos dentro das etiquetas.
 
-all: bin ./bin/test ./bin/parque
+all: bin ./bin/gerador ./bin/parque
 
 bin:
 	mkdir -p bin
 
 # 	Para cada ficheiro fazer uma nova etiqueta com o caminho.
 
-./bin/test:
-	gcc -Wall test.c -o ./bin/test -lm -pthread
+./bin/gerador:
+	gcc -Wall gerador.c -o ./bin/gerador -lm -pthread
 
 ./bin/parque:
 	gcc -Wall parque.c -o ./bin/parque -lm -pthread
