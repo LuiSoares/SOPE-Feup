@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <string.h>
 
 #define MAXLINE 128
 
@@ -26,8 +27,8 @@ int main(void)
 		sprintf(toPass, "%d,%d", x, y);	// pass x and y to string
 		
 		close(fd[0]); /* fecha lado receptor do pipe */
-		write(fd[1], toPass, 4);
-				close(fd[1]);
+		write(fd[1], toPass, strlen(toPass));
+		close(fd[1]);
 	}
 	else { /* filho */
 		int soma, sub, mult;
