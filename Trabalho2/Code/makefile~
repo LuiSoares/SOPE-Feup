@@ -1,0 +1,23 @@
+#	Para só fazer make uma vez, o nome da etiqueta (Ex: "./bin/test")
+# tem de ter o mesmo nome do executável. Isto porque o GCC toma essa 
+# etiqueta como sendo o nome do programa, e, se não o encontrar, 	
+# faz novo make. 
+
+# 	No all só se podem usar etiquetas.
+#	Comandos têm de ser escritos dentro das etiquetas.
+
+all: bin ./bin/test ./bin/parque
+
+bin:
+	mkdir -p bin
+
+# 	Para cada ficheiro fazer uma nova etiqueta com o caminho.
+
+./bin/test:
+	gcc -Wall test.c -o ./bin/test -lm -pthread
+
+./bin/parque:
+	gcc -Wall parque.c -o ./bin/parque -lm -pthread
+
+clean: 
+	rm test.o
