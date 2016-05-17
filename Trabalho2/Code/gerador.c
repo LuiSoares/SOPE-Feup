@@ -23,6 +23,6 @@ int main() {
   pthread_create(&tb, NULL, thrfunc, &b); 
   pthread_join(ta, NULL); 
   pthread_join(tb, NULL); 
-  return 0; 
+  return 1; 
 }
 

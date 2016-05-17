@@ -6,19 +6,30 @@
 # 	No all só se podem usar etiquetas.
 #	Comandos têm de ser escritos dentro das etiquetas.
 
-all: bin ./bin/test ./bin/parque
+all: bin ./bin/gerador
 
 bin:
 	mkdir -p bin
 
-# 	Para cada ficheiro fazer uma nova etiqueta com o caminho.
 
-./bin/gerador:
-	gcc -Wall gerador.c -o ./bin/gerador -lm -pthread
+### Criação dos executáveis
+# Para cada ficheiro fazer uma nova etiqueta com o caminho.
+#<caminho do executável>: <ficheiros.o>
+#	gcc -Wall <ficheiros.o> -o <caminho> -lm -pthread
 
-./bin/parque:
-	gcc -Wall parque.c -o ./bin/parque -lm -pthread
+./bin/gerador: gerador.o
+	gcc -Wall gerador.o -o ./bin/gerador -lm -pthread
 
+
+### Criação dos ficheiros objeto
+#<ficheiro.o>: <ficheiros.c> <ficheiros.h>
+#	gcc <ficheiros.c> -c
+
+gerador.o: gerador.c
+	gcc gerador.c -c 
+
+### Apagar ficheiros objeto
 
 clean: 
-	rm -rf bin/
+	rm *.o
+	rm -r bin/* bin/.*
