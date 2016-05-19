@@ -14,6 +14,15 @@ pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;	// initialization of mutex
 
 int nSpaces, openTime;
 
+typedef struct vehicleInfo
+{
+	char entryDoor;
+	time_t parkingTime;
+	int vehicleID;
+	char* fifoName;
+	
+} vehicleInfo;
+
 
 /* Creates the controller threads.
  * @param position The position of the controller, which can be either 1 == North, 2 == South, 3 == West or 4 == East.*/
@@ -48,6 +57,8 @@ int createController(int position)
 	
 	return 0; 
 }
+
+
 
 void * thrfunc(void * arg) { 
   int i;
