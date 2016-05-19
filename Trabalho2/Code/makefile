@@ -6,7 +6,7 @@
 # 	No all só se podem usar etiquetas.
 #	Comandos têm de ser escritos dentro das etiquetas.
 
-all: bin ./bin/gerador
+all: bin ./bin/gerador ./bin/parque
 
 bin:
 	mkdir -p bin
@@ -18,15 +18,20 @@ bin:
 #	gcc -Wall <ficheiros.o> -o <caminho> -lm -pthread
 
 ./bin/gerador: gerador.o
-	gcc -Wall gerador.o -o ./bin/gerador -lm -pthread
+	gcc -Wall gerador.o -o ./bin/gerador -lm -pthread -lrt 
 
+./bin/parque: parque.o
+	gcc -Wall parque.o -o ./bin/parque -lm -pthread -lrt 
 
 ### Criação dos ficheiros objeto
 #<ficheiro.o>: <ficheiros.c> <ficheiros.h>
 #	gcc <ficheiros.c> -c
 
 gerador.o: gerador.c
-	gcc gerador.c -c 
+	gcc gerador.c -c
+
+parque.o: parque.c
+	gcc parque.c -c 
 
 ### Apagar ficheiros objeto
 

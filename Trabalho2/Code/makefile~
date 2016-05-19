@@ -18,7 +18,7 @@ bin:
 #	gcc -Wall <ficheiros.o> -o <caminho> -lm -pthread
 
 ./bin/gerador: gerador.o
-	gcc -Wall gerador.o -o ./bin/gerador -lm -pthread
+	gcc -Wall gerador.o -o ./bin/gerador -lm -pthread -lrt 
 
 
 ### Criação dos ficheiros objeto
@@ -32,4 +32,4 @@ gerador.o: gerador.c
 
 clean: 
 	rm *.o
-	rm -r bin/* bin/.*
+	rm -r bin/*

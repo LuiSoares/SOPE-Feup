@@ -1,9 +1,17 @@
 #include <stdio.h> 
 #include <unistd.h> 
-#include <pthread.h> 
+#include <pthread.h>
+#include <sys/stat.h> 
+
+#define FIFO_READ 0
+#define FIFO_WRITE 1 
 
 #define STDERR 2 
 #define NUMITER 10000
+
+pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;	// initialization of mutex
+
+
 
 void * thrfunc(void * arg) { 
   int i;
@@ -15,6 +23,7 @@ void * thrfunc(void * arg) {
 }
 
 int main() {  
+	
   pthread_t ta, tb;
   char a = '1';
   char b = '2';
