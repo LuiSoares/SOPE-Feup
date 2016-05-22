@@ -1,36 +1,35 @@
 #include <stdio.h> 
 #include <unistd.h> 
-#include <pthread.h> 
-#include <sys/stat.h> 
 #include <time.h>
+#include  <fcntl.h>
+//THREAD
+#include <pthread.h> 
+//FIFOS
+#include <sys/stat.h> 
+#include <sys/types.h>
 
-#define FIFO_READ 0
-#define FIFO_WRITE 1 
 
-#define STDERR 2 
-#define NUMITER 10000
-
-pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;	// initialization of mutex
+#define BUF_SIZE 100
 
 int numParkingSpaces, openingTime;
 
-typedef struct vehicleInfo
-{
+typedef struct{
+
 	char entryDoor;
-	time_t parkingTime;
+	clock_t parkingTime;
 	int vehicleID;
 	char* fifoName;
-	
+
 } vehicleInfo;
 
 
 /*
-*	Creates valet to accompany vehicle to a free parking space or an exit
+	Creates valet to accompany vehicle to a free parking space or an exit
 */
 void * valet (void *arg);
 
 /*
-*	Creates controller
+	Creates controller
 */
 void *controller (void *direction){
 
@@ -86,17 +85,14 @@ void *controller (void *direction){
 
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]){
 	
-	if (argc != 3)
-	{
-		 printf("Usage: %s <nr_pos> <nr_thrs>\n", argv[0]);
-		 return 1;
+	//Wrong number of arguments
+	if (argc != 3){
+		printf("Usage: %s <NumParkingSpaces> <OpeningTime>", argv[0]);
+		return -1;
 	}
-	
-	numParkingSpaces = atoi(argv[1]);	// number of parking spaces
-	openingTime = atoi(argv[2]);		// duration of the parking lot in SECONDS
-	
+
 	pthread_t contN, contS, contW, contE;
 
 	//Cria os controladores de cada entrada/saída do parque
@@ -107,4 +103,3 @@ int main(int argc, char* argv[]) {
 
 	return 0;
 }
-
