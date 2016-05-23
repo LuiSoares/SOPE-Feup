@@ -16,9 +16,13 @@
 #define STDERR 2 
 #define NUMITER 10000
 
+#define DEBUG 1
+#define ALLOW_WR_FIFOS 0
+
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;	// initialization of mutex
 int generatingTime, clockUnit;	// main parameters
 FILE* geradorLog;	// log file
+int ticks;
 
 /*
  * Struct that stores a vehicle's information.
@@ -28,7 +32,7 @@ typedef struct VehicleInfo
 	char entryDoor;		// N, S, W or E
 	int parkingTime;	// in TICKS
 	int vehicleID;		// depending on the counter
-	char* fifoName;		// "vehicle<id>"
+	char fifoName[30];		// "vehicle<id>"
 	
 } VehicleInfo;
 
@@ -83,8 +87,9 @@ int generateVehicleInfo(VehicleInfo* info, int vehicleID)
 void *createVehicle (void* inf)
 {	
 	VehicleInfo* info;
+	info = (VehicleInfo*)malloc(sizeof(VehicleInfo));
 	info = (VehicleInfo*)inf;
-	pthread_mutex_lock (&mut);
+	
 	
 	// Create private fifo
 	if (mkfifo(info->fifoName, 0660) < 0)
@@ -100,6 +105,8 @@ void *createVehicle (void* inf)
 	char parqueFifoName[] = "/tmp/fifo";
 	sprintf(parqueFifoName, "%s%c", parqueFifoName, info->entryDoor);
 	
+	if(ALLOW_WR_FIFOS)
+	{
 	if((parqueFifoFD = open(parqueFifoName, O_WRONLY | O_NONBLOCK)) != -1)
 	{
 		write(parqueFifoFD, info, sizeof(VehicleInfo)); 
@@ -108,32 +115,51 @@ void *createVehicle (void* inf)
 	}
 	else
 	{
-		printf ("Error opening fifo '%s' - in createVehicle()", parqueFifoName);
+		printf ("Error opening fifo '%s' - in createVehicle()\n", parqueFifoName);
 	}		
-		
+	}
+	
 	// Receive answer from parque
 	int	privateFifoFD;
-	char answer[30] = '0';
+	char answer[30] = {0};
 	
-	if((privateFifoFD = open(privateFifoName, O_RDONLY)) != -1);	// waits for something to be written, when something is written the thread ends
+	if(ALLOW_WR_FIFOS)
+	{
+	if((privateFifoFD = open(info->fifoName, O_RDONLY)) != -1)	// waits for something to be written, when something is written the thread ends
 	{
 		read(privateFifoFD, answer, sizeof(answer));
 	}
 	else
 	{
-		printf ("Error opening fifo '%s' - in createVehicle()", privateFifoName);
+		printf ("Error opening fifo '%s' - in createVehicle()\n", info->fifoName);
 	}
+		}
 	
-	// Write to log file
 	
-	geradorLog = fopen("gerador.log", "a+");
-	fprintf (geradorLog, "%d; %c; %d; %d; %s\n", info->vehicleID, info->entryDoor; info->parkingTime; answer);
-		
-	// Delete private fifo
-	if (unlink(privateFifoName) < 0)
-		printf ("Error destroying '%s'\n", fifoName);
+	
+	
+	//--- Begin writing to log file
+	pthread_mutex_lock(&mut);
+	
+	if((geradorLog = fopen("gerador.log", "a+")) == NULL)
+		perror("fopen error in createVehicle");
+	
+	//TODO: ADICIONAR TEMPO DE VIDA
+	fprintf (geradorLog, "%d; %d; %c; %d; %s\n", ticks, info->vehicleID, info->entryDoor, info->parkingTime, answer);
+	
+	if(DEBUG)
+		printf("I've arrived inside gerador.log's open()\n");
+	
+	fclose(geradorLog);
 		
 	pthread_mutex_unlock(&mut);
+	//--- End writing to log file
+	
+	// Delete private fifo
+	if (unlink(info->fifoName) < 0)
+		printf ("Error destroying '%s'\n", info->fifoName);
+		
+	
 	
 	return NULL;
 }
@@ -150,7 +176,7 @@ int main(int argc, char* argv[])
 	clockUnit = atoi(argv[2]);		// clock's unit for generation in TICKS
 	
 	// Create log file
-	geradorLog = fopen("gerador.log", "a+"); // a+ == create + append
+	geradorLog = fopen("gerador.log", "w"); // w == writing and erases previous contentes if file already existed
 	if (geradorLog == NULL)
 		printf ("Couldn't create gerador.log file\n");
 	else
@@ -160,27 +186,20 @@ int main(int argc, char* argv[])
 	
 	
 	// i will count the cycles TICKS. timeInterval will tell in how many ticks should a vehicle be created
-	int i, timeInterval = 0, vehicleCounter = 0;
+	int i, timeInterval = 0, vehicleCounter = 10;
 	VehicleInfo newVehicle;
 	
 	srand((unsigned)time(NULL));
 	
-	for (i = 0; i < CLOCKS_PER_SEC * generatingTime; i++)
+	for (ticks = 0; ticks < CLOCKS_PER_SEC * generatingTime; ticks++)
 	{
 		//Defining time interval of vehicle generation
 		int r, multiple;
 		
-		//Writing tick to the log file
-		
-		geradorLog = fopen("gerador.log", "a+");
-		
-		fprintf(geradorLog,"%d;", i);
-		
-		close(geradorLog);
-		
 		//Thread ID for vehicle -- Thread is DETACHED
 		pthread_t tidv[MAX_THREADS];
 		
+		//Create attriubute to generate DETACHED thread
 		pthread_attr_t attr;
 		pthread_attr_init(&attr);
 		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
@@ -191,9 +210,11 @@ int main(int argc, char* argv[])
 		{
 			vehicleCounter ++;
 			generateVehicleInfo(&newVehicle, vehicleCounter); 
-			printVehicleInfo(newVehicle);
 			
-			pthread_create(tidv[vehcileCounter % MAX_THREADS], &attr, createVehicle, &newVehicle);
+			if(DEBUG)
+				printVehicleInfo(newVehicle);
+			
+			pthread_create(&tidv[vehicleCounter % MAX_THREADS], &attr, createVehicle, &newVehicle);
 			
 			if (r > 0 <= 5) // 50% probability
 				multiple = 0;
