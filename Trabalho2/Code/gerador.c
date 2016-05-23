@@ -6,6 +6,8 @@
 #include <time.h>
 #include <stdlib.h>
 
+#define MAX_THREADS 100    // max number of threads
+
 #define FIFO_READ 0
 #define FIFO_WRITE 1 
 
@@ -15,6 +17,9 @@
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;	// initialization of mutex
 int generatingTime, clockUnit; 
 
+/*
+ * Struct that stores a vehicle's information.
+ * */
 typedef struct VehicleInfo
 {
 	char entryDoor;		// N, S, W or E
@@ -41,8 +46,9 @@ int randInRange(int min_n, int max_n)
 }
 
 /*
- * Creates a vehicle*/
-int createVehicle(VehicleInfo* info, int vehicleID)
+ * Creates a vehicle
+ * */
+int generateVehicleInfo(VehicleInfo* info, int vehicleID)
 {
 	int r;
 	
@@ -65,7 +71,45 @@ int createVehicle(VehicleInfo* info, int vehicleID)
 	info->vehicleID = vehicleID;
 	
 	// Vehicle's FIFO name
-	sprintf(info->fifoName, "vehicle%d", info->vehicleID);
+	sprintf(info->fifoName, "/tmp/vehicle%d", info->vehicleID);
+}
+
+void *createVehicle (void* info)
+{	
+	// Create private fifo
+	if (mkfifo(info->fifoName, 0660) < 0)
+	{
+		if ((errno==EEXIST) 
+			printf("FIFO '%s' already exists\n", info->fifoName));
+		else 
+			printf ("Can't create FIFO -- in createVehicle()\n");
+	}
+	
+	// Write to parque fifo
+	int parqueFifoFD;
+	char parqueFifoName[] = "/tmp/fifo";
+	sprintf(parqueFifoName, "%s%c", parqueFinoName, (char *)info->entryDoor);
+	
+	if((parqueFifoFD = open(parqueFifoName, O_WRONLY | O_NONBLOCK)) != -1)
+	{
+		write(fifoFD, info, sizeof(VehicleInfo)); 
+		
+		close(parqueFifoFD);
+	}
+	else
+	{
+		printf ("Error opening fifo '%s' - in createVehicle()", parqueFifoName);
+	}		
+		
+	// Wait for command from parque	
+	int	privateFifoFD;
+	
+	if((privateFifoFD = open(privateFifoName, O_WRONLY | O_NONBLOCK)) != -1)
+		
+	// Delete private fifo
+	if (unlink(fifoName) < 0)
+		printf ("Error destroying '%s'\n", fifoName);
+	
 }
 
 int main(int argc, char* argv[]) 
@@ -90,13 +134,22 @@ int main(int argc, char* argv[])
 		//Defining time interval of vehicle generation
 		int r, multiple;
 		
+		//Thread ID for vehicle -- Thread is DETACHED
+		pthread_t tidv[MAX_THREADS];
+		
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+		pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		
 		r = randInRange(1, 10);
 		
 		if (timeInterval == 0)	// create vehicle and decide another interval
 		{
 			vehicleCounter ++;
-			createVehicle(&newVehicle, vehicleCounter); 
+			generateVehicleInfo(&newVehicle, vehicleCounter); 
 			printVehicleInfo(newVehicle);
+			
+			pthread_create(tidv[vehcileCounter % MAX_THREADS], &attr, createVehicle, &newVehicle);
 			
 			if (r > 0 <= 5) // 50% probability
 				multiple = 0;
