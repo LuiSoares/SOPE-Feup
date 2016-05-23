@@ -2,6 +2,8 @@
 #include <unistd.h> 
 #include <pthread.h>
 #include <sys/stat.h> 
+#include <errno.h>
+#include <fcntl.h>
 
 #include <time.h>
 #include <stdlib.h>
@@ -15,7 +17,8 @@
 #define NUMITER 10000
 
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;	// initialization of mutex
-int generatingTime, clockUnit; 
+int generatingTime, clockUnit;	// main parameters
+FILE* geradorLog;	// log file
 
 /*
  * Struct that stores a vehicle's information.
@@ -74,13 +77,20 @@ int generateVehicleInfo(VehicleInfo* info, int vehicleID)
 	sprintf(info->fifoName, "/tmp/vehicle%d", info->vehicleID);
 }
 
-void *createVehicle (void* info)
+/*
+ * Function of vehicle's thread
+ * */
+void *createVehicle (void* inf)
 {	
+	VehicleInfo* info;
+	info = (VehicleInfo*)inf;
+	pthread_mutex_lock (&mut);
+	
 	// Create private fifo
 	if (mkfifo(info->fifoName, 0660) < 0)
 	{
-		if ((errno==EEXIST) 
-			printf("FIFO '%s' already exists\n", info->fifoName));
+		if (errno==EEXIST) 
+			printf("FIFO '%s' already exists\n", info->fifoName);
 		else 
 			printf ("Can't create FIFO -- in createVehicle()\n");
 	}
@@ -88,11 +98,11 @@ void *createVehicle (void* info)
 	// Write to parque fifo
 	int parqueFifoFD;
 	char parqueFifoName[] = "/tmp/fifo";
-	sprintf(parqueFifoName, "%s%c", parqueFinoName, (char *)info->entryDoor);
+	sprintf(parqueFifoName, "%s%c", parqueFifoName, info->entryDoor);
 	
 	if((parqueFifoFD = open(parqueFifoName, O_WRONLY | O_NONBLOCK)) != -1)
 	{
-		write(fifoFD, info, sizeof(VehicleInfo)); 
+		write(parqueFifoFD, info, sizeof(VehicleInfo)); 
 		
 		close(parqueFifoFD);
 	}
@@ -101,15 +111,31 @@ void *createVehicle (void* info)
 		printf ("Error opening fifo '%s' - in createVehicle()", parqueFifoName);
 	}		
 		
-	// Wait for command from parque	
+	// Receive answer from parque
 	int	privateFifoFD;
+	char answer[30] = '0';
 	
-	if((privateFifoFD = open(privateFifoName, O_WRONLY | O_NONBLOCK)) != -1)
+	if((privateFifoFD = open(privateFifoName, O_RDONLY)) != -1);	// waits for something to be written, when something is written the thread ends
+	{
+		read(privateFifoFD, answer, sizeof(answer));
+	}
+	else
+	{
+		printf ("Error opening fifo '%s' - in createVehicle()", privateFifoName);
+	}
+	
+	// Write to log file
+	
+	geradorLog = fopen("gerador.log", "a+");
+	fprintf (geradorLog, "%d; %c; %d; %d; %s\n", info->vehicleID, info->entryDoor; info->parkingTime; answer);
 		
 	// Delete private fifo
-	if (unlink(fifoName) < 0)
+	if (unlink(privateFifoName) < 0)
 		printf ("Error destroying '%s'\n", fifoName);
+		
+	pthread_mutex_unlock(&mut);
 	
+	return NULL;
 }
 
 int main(int argc, char* argv[]) 
@@ -123,6 +149,16 @@ int main(int argc, char* argv[])
 	generatingTime = atoi(argv[1]);	// period of time of generation in SECONDS
 	clockUnit = atoi(argv[2]);		// clock's unit for generation in TICKS
 	
+	// Create log file
+	geradorLog = fopen("gerador.log", "a+"); // a+ == create + append
+	if (geradorLog == NULL)
+		printf ("Couldn't create gerador.log file\n");
+	else
+		fprintf(geradorLog,"t(ticks); id_viat; destin ; t_estacion ; t_vida ; observ\n");
+	
+	fclose(geradorLog);
+	
+	
 	// i will count the cycles TICKS. timeInterval will tell in how many ticks should a vehicle be created
 	int i, timeInterval = 0, vehicleCounter = 0;
 	VehicleInfo newVehicle;
@@ -133,6 +169,14 @@ int main(int argc, char* argv[])
 	{
 		//Defining time interval of vehicle generation
 		int r, multiple;
+		
+		//Writing tick to the log file
+		
+		geradorLog = fopen("gerador.log", "a+");
+		
+		fprintf(geradorLog,"%d;", i);
+		
+		close(geradorLog);
 		
 		//Thread ID for vehicle -- Thread is DETACHED
 		pthread_t tidv[MAX_THREADS];
@@ -168,6 +212,8 @@ int main(int argc, char* argv[])
 			timeInterval--;	// decrease time
 		}
 	}
+	
+	
 	
 	return 0;
 }
