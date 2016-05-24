@@ -109,12 +109,14 @@ void *createVehicle (void* inf)
 	if (mkfifo(info.fifoName, 0660) == -1)
 	{
 		if (errno==EEXIST) 
-			printf("FIFO '%s' already exists\n", info.fifoName);
+			printf("FIFO '%s' already existed\n", info.fifoName);
+			
 		else 
 			printf ("Can't create FIFO -- in createVehicle()\n");
 			
+		unlink(info.fifoName);	
 		free(inf);
-		return NULL;
+		pthread_exit(NULL);
 	}
 	
 	// Write to 'parque' fifo
@@ -139,7 +141,7 @@ void *createVehicle (void* inf)
 			// WRITE ATTEMP TO LOG FILE
 			char closed[100];
 			sprintf (closed, "%8ld; %7d; %6c; %10d; %6ld; %s\n", 
-			times(NULL) - ticksOnStart, info.vehicleID, info.entryDoor, info.parkingTime, times(NULL)- threadBegin, PARQUE_ENCERRADO);
+			times(NULL) - ticksOnStart, info.vehicleID, info.entryDoor, info.parkingTime, times(NULL) - threadBegin, PARQUE_ENCERRADO);
 			appendToLog(LOG_FILE, closed);
 			
 			close(entryFifoFD);
@@ -215,19 +217,12 @@ void *createVehicle (void* inf)
 		close(privateFifoFD);
 	}
 	
-	int addParkingTime = 0;
-	
-	if (strcmp(answer, PARQUE_ENTRADA) == 0)
-	{
-			addParkingTime = 1;
-	}
-	
 	//--- Begin writing RESULT to log file
 	if((geradorLog = fopen(LOG_FILE, "a+")) == NULL)
 		perror("fopen error in createVehicle");
 	
 	fprintf (geradorLog, "%8ld; %7d; %6c; %10d; %6ld; %s\n", 
-	times(NULL)- ticksOnStart, info.vehicleID, info.entryDoor, info.parkingTime, times(NULL)- threadBegin + addParkingTime*info.parkingTime, answer);
+	times(NULL)- ticksOnStart, info.vehicleID, info.entryDoor, info.parkingTime, times(NULL)- threadBegin, answer);
 	
 	if(DEBUG)
 		printf("I've arrived inside %s's open()\n", LOG_FILE);
@@ -285,7 +280,7 @@ void *createVehicle (void* inf)
 	// Begin generation of vehicles
 	ticksOnStart = times(NULL);	
 	
-	while (elapsedTime < generatingTime)
+	do 
 	{
 		vehicleCounter++;
 		newVehicle = malloc(sizeof(vehicle_info_t));
@@ -299,7 +294,10 @@ void *createVehicle (void* inf)
 		
 		if(DEBUG)
 			printf ("Elapsed Time: %f\n", elapsedTime);
-	}
+	} while(elapsedTime < generatingTime);
+	
+	if(DEBUG)
+		printf("Got out of the main cycle!\n");
 	
 	pthread_exit(NULL);
 	
