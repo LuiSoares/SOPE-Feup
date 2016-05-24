@@ -4,7 +4,6 @@
 #include <sys/stat.h> 
 #include <errno.h>
 #include <fcntl.h>
-
 #include <time.h>
 #include <stdlib.h>
 
@@ -17,11 +16,12 @@
 #define NUMITER 10000
 
 #define DEBUG 1
-#define ALLOW_WR_FIFOS 0
+#define ALLOW_WR_FIFOS 1
 
 pthread_mutex_t mut = PTHREAD_MUTEX_INITIALIZER;	// initialization of mutex
 int generatingTime, clockUnit;	// main parameters
 FILE* geradorLog;	// log file
+clock_t ticksOnStart;
 int ticks;
 
 /*
@@ -53,7 +53,7 @@ int randInRange(int min_n, int max_n)
 }
 
 /*
- * Creates a vehicle
+ * Creates a random vehicle
  * */
 int generateVehicleInfo(VehicleInfo* info, int vehicleID)
 {
@@ -133,10 +133,7 @@ void *createVehicle (void* inf)
 	{
 		printf ("Error opening fifo '%s' - in createVehicle()\n", info->fifoName);
 	}
-		}
-	
-	
-	
+	}
 	
 	//--- Begin writing to log file
 	pthread_mutex_lock(&mut);
@@ -145,12 +142,14 @@ void *createVehicle (void* inf)
 		perror("fopen error in createVehicle");
 	
 	//TODO: ADICIONAR TEMPO DE VIDA
-	fprintf (geradorLog, "%d; %d; %c; %d; %s\n", ticks, info->vehicleID, info->entryDoor, info->parkingTime, answer);
+	fprintf (geradorLog, "%8ld; %7d; %6c; %10d; %6s; %s\n", clock() - ticksOnStart, info->vehicleID, info->entryDoor, info->parkingTime, "?", answer);
 	
 	if(DEBUG)
 		printf("I've arrived inside gerador.log's open()\n");
 	
 	fclose(geradorLog);
+	
+	free(inf);
 		
 	pthread_mutex_unlock(&mut);
 	//--- End writing to log file
@@ -180,16 +179,19 @@ int main(int argc, char* argv[])
 	if (geradorLog == NULL)
 		printf ("Couldn't create gerador.log file\n");
 	else
-		fprintf(geradorLog,"t(ticks); id_viat; destin ; t_estacion ; t_vida ; observ\n");
+		fprintf(geradorLog,"t(ticks); id_viat; destin; t_estacion; t_vida; observ\n");
 	
 	fclose(geradorLog);
 	
 	
 	// i will count the cycles TICKS. timeInterval will tell in how many ticks should a vehicle be created
 	int i, timeInterval = 0, vehicleCounter = 10;
-	VehicleInfo newVehicle;
+	
+	VehicleInfo* newVehicle;
 	
 	srand((unsigned)time(NULL));
+	
+	ticksOnStart = clock();
 	
 	for (ticks = 0; ticks < CLOCKS_PER_SEC * generatingTime; ticks++)
 	{
@@ -197,7 +199,7 @@ int main(int argc, char* argv[])
 		int r, multiple;
 		
 		//Thread ID for vehicle -- Thread is DETACHED
-		pthread_t tidv[MAX_THREADS];
+		pthread_t tid;
 		
 		//Create attriubute to generate DETACHED thread
 		pthread_attr_t attr;
@@ -208,13 +210,14 @@ int main(int argc, char* argv[])
 		
 		if (timeInterval == 0)	// create vehicle and decide another interval
 		{
+			newVehicle = malloc(sizeof(VehicleInfo));
 			vehicleCounter ++;
-			generateVehicleInfo(&newVehicle, vehicleCounter); 
+			generateVehicleInfo(newVehicle, vehicleCounter); 
 			
 			if(DEBUG)
-				printVehicleInfo(newVehicle);
+				printVehicleInfo(*newVehicle);
 			
-			pthread_create(&tidv[vehicleCounter % MAX_THREADS], &attr, createVehicle, &newVehicle);
+			pthread_create(&tid, &attr, createVehicle, newVehicle);
 			
 			if (r > 0 <= 5) // 50% probability
 				multiple = 0;
@@ -233,8 +236,6 @@ int main(int argc, char* argv[])
 			timeInterval--;	// decrease time
 		}
 	}
-	
-	
 	
 	return 0;
 }
