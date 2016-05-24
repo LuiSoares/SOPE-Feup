@@ -1,2 +1,5 @@
 t(ticks) ; nlug ; id_viatura ; observ
-        0;     1;          3 ; Entrada
+    19600;    1 ;          7 ; Entrada
+    20300;    2 ;          8 ; Entrada
+    40300;    3 ;         10 ; Entrada
+    40300;    4 ;         10 ; Entrada

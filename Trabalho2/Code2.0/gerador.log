@@ -1,13 +1,10 @@
 t(ticks); id_viat; destin; t_estacion; t_vida; observ
-     200;       1;      W;        100;      0; Encerrado!
-     300;       2;      S;        800;      0; Encerrado!
-     400;       3;      N;        100;      ?; Entrada
-     400;       3;      N;        100;      0; Entrada
-     600;       4;      N;        500;      0; Encerrado!
-     600;       5;      S;        500;      0; Encerrado!
-     600;       6;      E;       1000;      0; Encerrado!
-     600;       7;      S;        200;      0; Encerrado!
-     600;       8;      E;       1000;      0; Encerrado!
-     600;       9;      W;        400;      0; Encerrado!
-     800;      10;      N;        200;      0; Encerrado!
-    1000;      11;      S;        900;      0; Encerrado!
+     200;       1;      N;        200;      0; Encerrado!
+     400;       3;      E;        300;      0; Encerrado!
+     400;       4;      E;        600;      0; Encerrado!
+     602;       7;      W;       1000;      2; Entrada
+     608;       8;      N;        600;      2; Entrada
+     608;       8;      N;        600;      2; 
+     808;      10;      E;       1000;      2; Entrada
+     808;      10;      E;       1000;      2; 
+    1006;      11;      W;        800;      0; Encerrado!
